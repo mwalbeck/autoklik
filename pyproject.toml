@@ -1,20 +1,19 @@
 [tool.poetry]
-name = "minecraft-tools"
+name = "autoklik"
 version = "0.1.0"
-description = "Minecraft auto clicker"
+description = "Auto clicker built around xdotool."
 authors = ["Magnus Walbeck <mw@mwalbeck.org>"]
 readme = "README.md"
-repository = "https://git.walbeck.it/mwalbeck/minecraft-tools"
-packages = [{ include = "minecraft_tools" }]
+repository = "https://git.walbeck.it/mwalbeck/autoklik"
+packages = [{ include = "autoklik" }]
 
 [tool.poetry.scripts]
-minecraft-tools = "minecraft_tools.__init__:main"
+autoklik = "autoklik.__init__:main"
 
 [tool.poetry.dependencies]
 python = "^3.8"
 
 [tool.poetry.dev-dependencies]
-pytest = "^5.2"
 flake8 = "^3.9.2"
 black = "^21.6b0"
 

@@ -1,4 +1,4 @@
-"""Minecraft auto clicker.
+"""Auto clicker built around xdotool.
 
 If window-name and window-id isn't given
 you will be asked to select the window to send clicks to using your mouse.
