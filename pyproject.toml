@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "autoklik"
-version = "0.1.0"
+version = "0.1.1"
 description = "Auto clicker built around xdotool."
 authors = ["Magnus Walbeck <mw@mwalbeck.org>"]
 readme = "README.md"

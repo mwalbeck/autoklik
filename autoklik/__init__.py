@@ -31,10 +31,20 @@ def setup_arguments():
         help="The interval between clicks in ms.",
     )
     parser.add_argument(
-        "-w", "--window-name", help="The name of the window to send clicks to."
+        "-w",
+        "--window-name",
+        help="""The name of the window to send clicks to. A search will be made using
+                the provided text and a selection screen shown if there are
+                multiple choices.""",
     )
     parser.add_argument(
         "-W", "--window-id", help="The id of the window to send clicks to."
+    )
+    parser.add_argument(
+        "-f",
+        "--ignore-when-focused",
+        action="store_true",
+        help="Don't send clicks to the select window when that window is focused.",
     )
     return parser
 
@@ -43,6 +53,8 @@ def main():
     logging.basicConfig(format="%(asctime)s - %(message)s", level=logging.WARNING)
     parser = setup_arguments()
     args = parser.parse_args()
+
+    logging.debug(args)
 
     if args.window_id:
         window = {
@@ -60,7 +72,7 @@ def main():
 
     click = {"click_id": args.type, "click_name": CLICK_NAMES[args.type]}
 
-    do_click(window, click, args.interval)
+    do_click(window, click, args.interval, args.ignore_when_focused)
 
 
 def select_window():
@@ -126,25 +138,47 @@ def get_window_name_from_id(window_id):
     )
 
 
-def do_click(window, click, interval):
+def do_click(window, click, interval, ignore_when_focused):
     print(
         f"Sending {click['click_name']}s every {interval}ms to {window['window_name']}"
     )
+
     interval = interval / 1000
     next_time = time.time() + interval
+
     while True:
         time.sleep(max(0, next_time - time.time()))
-        # Send mouse down and up separately to prevent wrong mouse inputs from being
-        # sent when those inputs are press on the actual mouse at the same time a click
-        # event is sent
-        subprocess.run(
-            ["xdotool", "mousedown", "--window", window["window_id"], click["click_id"]]
-        )
-        subprocess.run(
-            ["xdotool", "mouseup", "--window", window["window_id"], click["click_id"]]
-        )
-        logging.info(f"{click['click_name']} sent")
+
+        if ignore_when_focused:
+            active_window = (
+                subprocess.run(["xdotool", "getactivewindow"], capture_output=True)
+                .stdout.strip()
+                .decode("UTF-8")
+            )
+
+            logging.debug(f"active window id: {active_window}")
+            logging.debug(f"sending clicks to window id: {window['window_id']}")
+
+            if active_window == window["window_id"]:
+                next_time += (time.time() - next_time) // interval * interval + interval
+                logging.info("click skipped")
+                continue
+
+        send_click(window, click)
         next_time += (time.time() - next_time) // interval * interval + interval
+
+
+def send_click(window, click):
+    # Send mouse down and up separately to prevent wrong mouse inputs from being
+    # sent when those inputs are press on the actual mouse at the same time a click
+    # event is sent
+    subprocess.run(
+        ["xdotool", "mousedown", "--window", window["window_id"], click["click_id"]]
+    )
+    subprocess.run(
+        ["xdotool", "mouseup", "--window", window["window_id"], click["click_id"]]
+    )
+    logging.info(f"{click['click_name']} sent")
 
 
 if __name__ == "__main__":
