@@ -5,7 +5,7 @@ name: lint
 
 steps:
   - name: lint
-    image: mwalbeck/python-poetry:1.1-3.8
+    image: mwalbeck/python-poetry:1.2-3.10
     pull: if-not-exists
     environment:
       APP_DIR: autoklik
@@ -27,7 +27,7 @@ name: release
 
 steps:
   - name: release
-    image: mwalbeck/python-poetry:1.1-3.8
+    image: mwalbeck/python-poetry:1.2-3.10
     pull: if-not-exists
     environment:
       POETRY_VIRTUALENVS_CREATE: "false"
@@ -46,6 +46,6 @@ depends_on:
 
 ---
 kind: signature
-hmac: d8f985d32d56000b445e61e495ba456eb137c4832846534c811b684ce96d55f4
+hmac: 19dea5db733c4d2ba570e8c25d3e89ac6df6067f16af2b1beeb83ff339704216
 
 ...
