@@ -45,6 +45,13 @@ def setup_arguments():
         action="store_true",
         help="Don't send clicks to the select window when that window is focused.",
     )
+    parser.add_argument(
+        "-a",
+        "--alternate",
+        choices=["1", "2", "3"],
+        nargs=2,
+        help="Alternate between two different types of clicks",
+    )
     return parser
 
 
@@ -69,9 +76,23 @@ def main():
     else:
         window = select_window()
 
-    click = {"click_id": args.type, "click_name": CLICK_NAMES[args.type]}
+    if args.alternate is None:
+        click = {"click_id": args.type, "click_name": CLICK_NAMES[args.type]}
 
-    do_click(window, click, args.interval, args.ignore_when_focused)
+        do_click(window, click, args.interval, args.ignore_when_focused)
+    else:
+        clicks = [
+            {
+                "click_id": args.alternate[0],
+                "click_name": CLICK_NAMES[args.alternate[0]],
+            },
+            {
+                "click_id": args.alternate[1],
+                "click_name": CLICK_NAMES[args.alternate[1]],
+            },
+        ]
+
+        do_clicks(window, clicks, args.interval, args.ignore_when_focused)
 
 
 def select_window():
@@ -164,6 +185,43 @@ def do_click(window, click, interval, ignore_when_focused):
                 continue
 
         send_click(window, click)
+        next_time += (time.time() - next_time) // interval * interval + interval
+
+
+def do_clicks(window, clicks, interval, ignore_when_focused):
+    print(
+        f"Sending {clicks[0]['click_name']}s and {clicks[1]['click_name']}s to {window['window_name']}, alternating between them every {interval}ms."
+    )
+
+    interval = interval / 1000
+    next_time = time.time() + interval
+    current_click = 0
+
+    while True:
+        time.sleep(max(0, next_time - time.time()))
+
+        if ignore_when_focused:
+            active_window = (
+                subprocess.run(["xdotool", "getactivewindow"], capture_output=True)
+                .stdout.strip()
+                .decode("UTF-8")
+            )
+
+            logging.debug(f"active window id: {active_window}")
+            logging.debug(f"sending clicks to window id: {window['window_id']}")
+
+            if active_window == window["window_id"]:
+                next_time += (time.time() - next_time) // interval * interval + interval
+                logging.info("click skipped")
+                continue
+
+        send_click(window, clicks[current_click])
+
+        if current_click == 0:
+            current_click = 1
+        else:
+            current_click = 0
+
         next_time += (time.time() - next_time) // interval * interval + interval
 
 
